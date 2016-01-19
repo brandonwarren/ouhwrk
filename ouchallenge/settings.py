@@ -77,6 +77,14 @@ WSGI_APPLICATION = 'ouchallenge.wsgi.application'
 
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.postgresql', # backends.postgresql_psycopg2 pre-1.9
+        'NAME': 'itemprices',
+        'USER': 'vagrant', #'django',
+        'PASSWORD': 'ouchallengev', #'ouchallenge',
+        'HOST': '',
+        'PORT': '',
+    },
+    'ro': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'itemprices',
         'USER': 'offerupchallenge',
