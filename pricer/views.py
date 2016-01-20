@@ -2,6 +2,8 @@ from django.http import JsonResponse # Django 1.7+
 from django.db.models import Count
 from pricer.models import ItemSale, ItemSaleLH
 
+USING_LOCALLY_HOSTED_DB=True
+
 def item_price(request):
     def ret_404():
         # could just create str_404, but doing so uses CPU for non-404 cases
@@ -13,7 +15,10 @@ def item_price(request):
     city = request.GET.get('city', '')
     if not item:
         return ret_404()
-    list_prices = ItemSaleLH.objects.filter(title=item)
+    if USING_LOCALLY_HOSTED_DB:
+        list_prices = ItemSaleLH.objects.filter(title=item)
+    else:
+        list_prices = ItemSale.objects.using('ro').filter(title=item)
     if city:
         list_prices = list_prices.filter(city=city)
     else:
@@ -54,7 +59,10 @@ def item_price2(request):
     city = request.GET.get('city', '')
     if not item:
         return ret_404()
-    list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
+    if USING_LOCALLY_HOSTED_DB:
+        list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
+    else:
+        list_prices = ItemSale.objects.using('ro').filter(title=item).values_list('list_price', flat=True).order_by() # no sort
     if city:
         list_prices = list_prices.filter(city=city)
     else:
