@@ -1,6 +1,7 @@
 import operator
 from django.http import JsonResponse # Django 1.7+
 from django.db.models import Count
+#from django.core.cache import cache # low-level cache
 from pricer.models import ItemSale, ItemSaleLH
 
 USING_LOCALLY_HOSTED_DB=True
@@ -18,6 +19,15 @@ def item_price(request):
     city = request.GET.get('city', '')
     if not item:
         return ret_404()
+
+    # see if we have answer in cache
+    #cache_key = 'ou_%s_%c' % (item, city)
+    #print 'cache_key = ',cache_key
+    #ret_val = cache.get(cache_key)
+    #if ret_val:
+    #    # return cached value
+    #    return ret_val
+
     if USING_LOCALLY_HOSTED_DB:
         list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
     else:
@@ -56,8 +66,10 @@ def item_price(request):
         "price_suggestion": price,
         "city": city
     }
-    return JsonResponse({'status': 200,
-                         'content': content})
+    ret_val = JsonResponse({'status': 200,
+                            'content': content})
+    #cache.set(cache_key, ret_val, 3600) # cache for 1 hour
+    return ret_val
 
 
 # 2nd version - do more on the database.
