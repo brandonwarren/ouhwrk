@@ -4,16 +4,11 @@ from django.db.models import Count
 from django.core.cache import cache # low-level cache
 from pricer.models import ItemSaleLH
 
-response_404 = JsonResponse({'status': 404,
-                             'content': { 'message': 'Not found' }})
-
 # Original version, straight-forward approach. Turns out to be faster than using
 # .values('list_price').annotate(num_items=Count('list_price')).order_by('-num_items')
 def item_price(request):
 
     item = request.GET.get('item', '')
-    if not item:
-        return response_404
     city = request.GET.get('city', '')
 
     # see if we have answer in cache
@@ -24,6 +19,12 @@ def item_price(request):
         # return cached value
         return ret_val
 
+    if not item:
+        ret_val = JsonResponse({'status': 404,
+                                'content': { 'message': 'Not found' }})
+        cache.set(cache_key, ret_val, 3600) # cache for 1 hour
+        return ret_val
+
     list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
     if city:
         list_prices = list_prices.filter(city=city)
@@ -31,8 +32,10 @@ def item_price(request):
         city = 'Not specified'
     total_count = list_prices.count()
     if not total_count:
-        cache.set(cache_key, response_404, 3600) # cache for 1 hour
-        return response_404
+        ret_val = JsonResponse({'status': 404,
+                                'content': { 'message': 'Not found' }})
+        cache.set(cache_key, ret_val, 3600) # cache for 1 hour
+        return ret_val
     # calculate the mode of list_prices
     price_counts = {}
     for list_price in list_prices:
