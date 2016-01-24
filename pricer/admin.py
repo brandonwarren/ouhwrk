@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import ItemSale
+from models import ItemSaleLH
 
-admin.site.register(ItemSale)
+admin.site.register(ItemSaleLH)
 

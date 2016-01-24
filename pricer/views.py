@@ -2,12 +2,11 @@ import operator
 from django.http import JsonResponse # Django 1.7+
 from django.db.models import Count
 #from django.core.cache import cache # low-level cache
-from pricer.models import ItemSale, ItemSaleLH
-
-USING_LOCALLY_HOSTED_DB=True
+from pricer.models import ItemSaleLH
 
 
-# Original version, straight-forward approach. Turns out to be faster than 2nd version.
+# Original version, straight-forward approach. Turns out to be faster than using
+# .values('list_price').annotate(num_items=Count('list_price')).order_by('-num_items')
 def item_price(request):
     def ret_404():
         # could just create str_404, but doing so uses CPU for non-404 cases
@@ -28,10 +27,7 @@ def item_price(request):
     #    # return cached value
     #    return ret_val
 
-    if USING_LOCALLY_HOSTED_DB:
-        list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
-    else:
-        list_prices = ItemSale.objects.using('ro').filter(title=item).values_list('list_price', flat=True).order_by()
+    list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
     if city:
         list_prices = list_prices.filter(city=city)
     else:
@@ -70,48 +66,4 @@ def item_price(request):
                             'content': content})
     #cache.set(cache_key, ret_val, 3600) # cache for 1 hour
     return ret_val
-
-
-# 2nd version - do more on the database.
-def item_price2(request):
-    def ret_404():
-        # could just create str_404, but doing so uses CPU for non-404 cases
-        return JsonResponse({
-            'status': 404,
-            'content': { 'message': 'Not found' }})
-
-    item = request.GET.get('item', '')
-    city = request.GET.get('city', '')
-    if not item:
-        return ret_404()
-    if USING_LOCALLY_HOSTED_DB:
-        list_prices = ItemSaleLH.objects.filter(title=item)
-    else:
-        list_prices = ItemSale.objects.using('ro').filter(title=item)
-    if city:
-        list_prices = list_prices.filter(city=city)
-    else:
-        city = 'Not specified'
-    total_count = list_prices.count()
-    if not total_count:
-        return ret_404()
-    list_prices = list_prices.values('list_price').annotate(num_items=Count('list_price')).order_by('-num_items')
-    price = list_prices[0]['list_price']
-    count = list_prices[0]['num_items']
-    # see if there are any ties
-    for price_info in list_prices[1:]:
-        if count != price_info['num_items']:
-            break
-        if price_info['list_price'] > price:
-            # a popularity tie (same count), so keep the highest list price value
-            price = price_info['list_price']
-
-    content = {
-        "item": item,
-        "item_count": total_count, # example results are closer to count, but spec says total_count
-        "price_suggestion": price,
-        "city": city
-    }
-    return JsonResponse({'status': 200,
-                         'content': content})
 

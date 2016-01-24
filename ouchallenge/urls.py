@@ -20,7 +20,6 @@ import pricer
 
 urlpatterns = [
     #url(r'^item-price-service/$', pricer.views.item_price, name='item-price-service'),
-    url(r'^item-price-service/$', 'pricer.views.item_price', name='item-price-service'),    # new vers
-    url(r'^item-price-service2/$', 'pricer.views.item_price2', name='item-price-service2'), # orig vers
+    url(r'^item-price-service/$', 'pricer.views.item_price', name='item-price-service'),
     url(r'^admin/', admin.site.urls),
 ]

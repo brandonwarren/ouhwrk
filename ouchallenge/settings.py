@@ -96,14 +96,14 @@ DATABASES = {
         'HOST': '',
         'PORT': '',
     },
-    'ro': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'itemprices',
-        'USER': 'offerupchallenge',
-        'PASSWORD': 'ouchallenge',
-        'HOST': 'offerupchallenge.cgtzqpsohu0g.us-east-1.rds.amazonaws.com',
-        'PORT': '5432',
-    }
+    #'ro': {
+    #    'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME': 'itemprices',
+    #    'USER': 'offerupchallenge',
+    #    'PASSWORD': 'ouchallenge',
+    #    'HOST': 'offerupchallenge.cgtzqpsohu0g.us-east-1.rds.amazonaws.com',
+    #    'PORT': '5432',
+    #}
 }
 
 
