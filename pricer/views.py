@@ -1,31 +1,28 @@
 import operator
 from django.http import JsonResponse # Django 1.7+
 from django.db.models import Count
-#from django.core.cache import cache # low-level cache
+from django.core.cache import cache # low-level cache
 from pricer.models import ItemSaleLH
 
+response_404 = JsonResponse({'status': 404,
+                             'content': { 'message': 'Not found' }})
 
 # Original version, straight-forward approach. Turns out to be faster than using
 # .values('list_price').annotate(num_items=Count('list_price')).order_by('-num_items')
 def item_price(request):
-    def ret_404():
-        # could just create str_404, but doing so uses CPU for non-404 cases
-        return JsonResponse({
-            'status': 404,
-            'content': { 'message': 'Not found' }})
 
     item = request.GET.get('item', '')
-    city = request.GET.get('city', '')
     if not item:
-        return ret_404()
+        return response_404
+    city = request.GET.get('city', '')
 
     # see if we have answer in cache
-    #cache_key = 'ou_%s_%c' % (item, city)
-    #print 'cache_key = ',cache_key
-    #ret_val = cache.get(cache_key)
-    #if ret_val:
-    #    # return cached value
-    #    return ret_val
+    cache_key = 'ou_%s_%s' % (item, city)
+    cache_key = cache_key.replace (' ', '_')  # whitespace not allowed in Memcached
+    ret_val = cache.get(cache_key)
+    if ret_val:
+        # return cached value
+        return ret_val
 
     list_prices = ItemSaleLH.objects.filter(title=item).values_list('list_price', flat=True).order_by() # no sort
     if city:
@@ -34,7 +31,8 @@ def item_price(request):
         city = 'Not specified'
     total_count = list_prices.count()
     if not total_count:
-        return ret_404()
+        cache.set(cache_key, response_404, 3600) # cache for 1 hour
+        return response_404
     # calculate the mode of list_prices
     price_counts = {}
     for list_price in list_prices:
@@ -64,6 +62,6 @@ def item_price(request):
     }
     ret_val = JsonResponse({'status': 200,
                             'content': content})
-    #cache.set(cache_key, ret_val, 3600) # cache for 1 hour
+    cache.set(cache_key, ret_val, 3600) # cache for 1 hour
     return ret_val
 

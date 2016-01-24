@@ -47,7 +47,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
-    'django.middleware.cache.UpdateCacheMiddleware', # per-site cache
+    #'django.middleware.cache.UpdateCacheMiddleware', # per-site cache
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -56,12 +56,12 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware', # per-site cache
+    #'django.middleware.cache.FetchFromCacheMiddleware', # per-site cache
 ]
 
-CACHE_MIDDLEWARE_ALIAS = 'default'
-CACHE_MIDDLEWARE_SECONDS = 3600 # 1 hour
-CACHE_MIDDLEWARE_KEY_PREFIX = '' # only 1 site, so leave blank
+#CACHE_MIDDLEWARE_ALIAS = 'default'
+#CACHE_MIDDLEWARE_SECONDS = 3600 # 1 hour
+#CACHE_MIDDLEWARE_KEY_PREFIX = '' # only 1 site, so leave blank
 
 ROOT_URLCONF = 'ouchallenge.urls'
 
