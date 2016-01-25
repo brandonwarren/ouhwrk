@@ -11,8 +11,7 @@ def item_price(request):
     city = request.GET.get('city', '')
 
     # see if we have answer in cache
-    cache_key = 'ou_%s_%s' % (item, city)
-    cache_key = cache_key.replace (' ', '_')  # whitespace not allowed in Memcached
+    cache_key = 'ou_{}_{}'.format(item, city).replace (' ', '_')
     ret_val = cache.get(cache_key)
     if ret_val:
         # return cached value
@@ -29,33 +28,29 @@ def item_price(request):
         list_prices = list_prices.filter(city=city)
     else:
         city = 'Not specified'
+
     # calculate the mode of list_prices
     price_counts = {}
     total_count = 0
     for list_price in list_prices:
         total_count += 1
-        if list_price in price_counts:
-            price_counts[list_price] += 1
-        else:
-            price_counts[list_price] = 1
+        price_counts[list_price] = price_counts.get(list_price, 0) + 1
     if not total_count:
         ret_val = JsonResponse({'status': 404,
                                 'content': { 'message': 'Not found' }})
         cache.set(cache_key, ret_val, 3600) # cache for 1 hour
         return ret_val
-    sorted_list_prices = sorted(list_prices)
     # suboptimal because we don't need to sort items less popular than the most popular one
     # find max, and all the values with same max value?
     sorted_price_counts = sorted(price_counts.items(), key=operator.itemgetter(1), reverse=True)
     # sorted_price_counts now contains the mode at the beginning. but there may be >1
     # sorted_price_counts = [(price, count), ...]
     price, count = sorted_price_counts[0]
-    for i in range(1, len(sorted_price_counts)):
-        if count != sorted_price_counts[i][1]:
+    for price2, count2 in sorted_price_counts[1:]:
+        if count2 != count:
             break
-        if sorted_price_counts[i][0] > price:
-            # a popularity tie (same count), so keep the highest list price value
-            price = sorted_price_counts[i][0]
+        if price2 > price:
+            price = price2  # a popularity tie (same count), so keep the highest list price value
 
     content = {
         "item": item,
