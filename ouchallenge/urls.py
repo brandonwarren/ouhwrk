@@ -16,10 +16,9 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-import pricer
+from pricer import views
 
 urlpatterns = [
-    #url(r'^item-price-service/$', pricer.views.item_price, name='item-price-service'),
-    url(r'^item-price-service/$', 'pricer.views.item_price', name='item-price-service'),
+    url(r'^item-price-service/$', views.item_price, name='item-price-service'),
     url(r'^admin/', admin.site.urls),
 ]
