@@ -1,4 +1,5 @@
 import operator
+from collections import Counter
 from django.http import JsonResponse # Django 1.7+
 from django.core.cache import cache # low-level cache
 from pricer.models import ItemSaleLH
@@ -30,11 +31,11 @@ def item_price(request):
         city = 'Not specified'
 
     # calculate the mode of list_prices
-    price_counts = {}
     total_count = 0
+    price_counts = Counter()
     for list_price in list_prices:
         total_count += 1
-        price_counts[list_price] = price_counts.get(list_price, 0) + 1
+        price_counts[list_price] += 1
     if not total_count:
         ret_val = JsonResponse({'status': 404,
                                 'content': { 'message': 'Not found' }})
@@ -42,7 +43,7 @@ def item_price(request):
         return ret_val
     # suboptimal because we don't need to sort items less popular than the most popular one
     # find max, and all the values with same max value?
-    sorted_price_counts = sorted(price_counts.items(), key=operator.itemgetter(1), reverse=True)
+    sorted_price_counts = price_counts.most_common()
     # sorted_price_counts now contains the mode at the beginning. but there may be >1
     # sorted_price_counts = [(price, count), ...]
     price, count = sorted_price_counts[0]
