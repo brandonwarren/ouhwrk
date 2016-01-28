@@ -41,17 +41,10 @@ def item_price(request):
                                 'content': { 'message': 'Not found' }})
         cache.set(cache_key, ret_val, 3600) # cache for 1 hour
         return ret_val
-    # suboptimal because we don't need to sort items less popular than the most popular one
-    # find max, and all the values with same max value?
-    sorted_price_counts = price_counts.most_common()
-    # sorted_price_counts now contains the mode at the beginning. but there may be >1
-    # sorted_price_counts = [(price, count), ...]
-    price, count = sorted_price_counts[0]
-    for price2, count2 in sorted_price_counts[1:]:
-        if count2 != count:
-            break
-        if price2 > price:
-            price = price2  # a popularity tie (same count), so keep the highest list price value
+
+    # find max, and all the values with same max value
+    max_count = max(price_counts.iteritems(), key=operator.itemgetter(1))[1]
+    price = max([price for price, count in price_counts.iteritems() if count == max_count])
 
     content = {
         "item": item,
